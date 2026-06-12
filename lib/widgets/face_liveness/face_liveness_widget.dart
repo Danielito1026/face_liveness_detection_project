@@ -66,6 +66,7 @@ import 'face_liveness_config.dart';
 import 'face_liveness_style.dart';
 import 'face_liveness_theme.dart';
 import 'liveness_challenge.dart';
+import 'no_face_hint.dart';
 import 'session_timer_bar.dart';
 import 'unsupported_device_prompt.dart';
 
@@ -144,6 +145,10 @@ class _DefaultStyle extends FaceLivenessStyle {
         dialogTitleStyle: FaceLivenessTextStyles.dialogTitle,
         dialogBodyStyle: FaceLivenessTextStyles.dialogBody,
         dialogButtonStyle: FaceLivenessTextStyles.dialogButton,
+        noFaceHintBackgroundColor: FaceLivenessColors.dialogBackground,
+        noFaceHintTextStyle: FaceLivenessTextStyles.challengeSubtitle,
+        noFaceHintIcon: Icons.face_retouching_off_outlined,
+        noFaceHintMessage: 'No face detected. Center your face in the frame.',
       );
 }
 
@@ -164,11 +169,13 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget>
   // --- Stream subscriptions ---
   StreamSubscription<ChallengeDirectorState>? _stateSub;
   StreamSubscription<double>? _timerSub;
+  StreamSubscription<bool>? _noFaceSub;
 
   // --- UI state ---
   ChallengeDirectorState? _directorState;
   double _timerProgress = 1.0;
   bool _showSuccessFlash = false;
+  bool _noFaceHintVisible = false;
 
   // --- Frame processing gate ---
   // Prevents overlapping async frame evaluations
@@ -192,6 +199,7 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget>
     WidgetsBinding.instance.removeObserver(this);
     _stateSub?.cancel();
     _timerSub?.cancel();
+    _noFaceSub?.cancel();
     _director.dispose();
     _validator.dispose();
     _cameraController?.dispose();
@@ -279,6 +287,7 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget>
 
     _stateSub = _director.stateStream.listen(_onDirectorState);
     _timerSub = _director.timerProgressStream.listen(_onTimerProgress);
+    _noFaceSub = _director.noFaceDetectedStream.listen(_onNoFaceChanged);
 
     _director.start();
   }
@@ -293,6 +302,12 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget>
     // Reset blink state when a blink challenge becomes active
     if (!state.isComplete && state.activeChallenge == LivenessChallenge.blink) {
       _validator.resetBlinkState();
+    }
+
+    // Clear stale no-face hint on challenge advance — give the new
+    // challenge a fresh debounce window.
+    if (!state.isComplete && _noFaceHintVisible) {
+      _noFaceHintVisible = false;
     }
 
     if (state.isComplete) {
@@ -315,6 +330,11 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget>
   void _onTimerProgress(double progress) {
     if (!mounted) return;
     setState(() => _timerProgress = progress);
+  }
+
+  void _onNoFaceChanged(bool noFaceDetected) {
+    if (!mounted) return;
+    setState(() => _noFaceHintVisible = noFaceDetected);
   }
 
   // ---------------------------------------------------------------------------
@@ -343,6 +363,15 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget>
         image: inputImage,
         challenge: _directorState!.activeChallenge,
       );
+
+      // Report presence/absence so the director can debounce the
+      // "no face detected" hint. `error` frames are treated as neutral
+      // (not reported) — a single bad frame shouldn't trigger the hint.
+      if (result == ChallengeResult.noFace) {
+        _director.reportFaceDetected(false);
+      } else if (result != ChallengeResult.error) {
+        _director.reportFaceDetected(true);
+      }
 
       if (result == ChallengeResult.pass) {
         await _onChallengePass();
@@ -469,7 +498,22 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget>
         // 3. Success flash — brief green tint on challenge pass
         SuccessFlash(visible: _showSuccessFlash),
 
-        // 4. Challenge UI — timer bar, progress dots, overlay panel
+        // 4. "No face detected" hint — debounced, shown over the cutout
+        if (state != null && !state.isComplete)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: SafeArea(
+              bottom: false,
+              child: NoFaceHint(
+                visible: _noFaceHintVisible,
+                style: widget.style,
+              ),
+            ),
+          ),
+
+        // 5. Challenge UI — timer bar, progress dots, overlay panel
         if (state != null && !state.isComplete)
           _ChallengeUiLayer(
             directorState: state,

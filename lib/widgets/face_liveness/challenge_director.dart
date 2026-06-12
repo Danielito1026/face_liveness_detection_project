@@ -113,9 +113,15 @@ class ChallengeDirector {
   // Streams
   final _stateController = StreamController<ChallengeDirectorState>.broadcast();
   final _timerController = StreamController<double>.broadcast();
+  final _noFaceController = StreamController<bool>.broadcast();
 
   bool _isStarted = false;
   bool _isDisposed = false;
+
+  // Debounce timer for the "no face detected" hint — avoids flicker on
+  // single dropped frames; only surfaces after sustained absence.
+  Timer? _noFaceDebounce;
+  bool _noFaceHintVisible = false;
 
   ChallengeDirector({required this.config});
 
@@ -131,6 +137,11 @@ class ChallengeDirector {
   /// every 100ms. UI timer bar listens to this.
   Stream<double> get timerProgressStream => _timerController.stream;
 
+  /// Emits true when no face has been detected for a sustained period
+  /// (debounced — see [reportFaceDetected]), false once a face reappears.
+  /// UI shows a "No face detected" hint when this emits true.
+  Stream<bool> get noFaceDetectedStream => _noFaceController.stream;
+
   // ---------------------------------------------------------------------------
   // Current state (synchronous read for initial widget build)
   // ---------------------------------------------------------------------------
@@ -138,7 +149,8 @@ class ChallengeDirector {
   LivenessChallenge get activeChallenge => _queue[_activeIndex];
   int get activeIndex => _activeIndex;
   int get totalChallenges => _queue.length;
-  int get completedCount => _activeIndex; // challenges before active index are done
+  int get completedCount =>
+      _activeIndex; // challenges before active index are done
 
   // ---------------------------------------------------------------------------
   // Lifecycle
@@ -167,8 +179,10 @@ class ChallengeDirector {
     _isDisposed = true;
     _sessionTimer?.cancel();
     _tickTimer?.cancel();
+    _noFaceDebounce?.cancel();
     _stateController.close();
     _timerController.close();
+    _noFaceController.close();
   }
 
   // ---------------------------------------------------------------------------
@@ -195,8 +209,44 @@ class ChallengeDirector {
   }
 
   // ---------------------------------------------------------------------------
-  // Private — queue building
+  // Face presence reporting
   // ---------------------------------------------------------------------------
+
+  /// Duration of sustained face absence before the "no face" hint is shown.
+  /// Short enough to feel responsive, long enough to ignore single dropped frames.
+  static const Duration noFaceDebounceDelay = Duration(milliseconds: 600);
+
+  /// Called by FaceLivenessWidget on every processed frame with whether a
+  /// valid face was detected ([ChallengeResult.noFace] vs other results).
+  ///
+  /// When a face is present, immediately clears any pending "no face" hint.
+  /// When absent, starts (or keeps running) a debounce timer — only after
+  /// [noFaceDebounceDelay] of continuous absence does the hint actually show.
+  /// No-op if the session is already complete or disposed.
+  void reportFaceDetected(bool detected) {
+    if (_isDisposed || !_isStarted) return;
+    if (_activeIndex >= _queue.length) return; // session complete
+
+    if (detected) {
+      // Face is back — cancel any pending hint and clear it if shown
+      _noFaceDebounce?.cancel();
+      _noFaceDebounce = null;
+      if (_noFaceHintVisible) {
+        _noFaceHintVisible = false;
+        _noFaceController.add(false);
+      }
+      return;
+    }
+
+    // Face absent — start debounce if not already running
+    if (_noFaceDebounce != null || _noFaceHintVisible) return;
+
+    _noFaceDebounce = Timer(noFaceDebounceDelay, () {
+      if (_isDisposed) return;
+      _noFaceHintVisible = true;
+      _noFaceController.add(true);
+    });
+  }
 
   List<LivenessChallenge> _buildQueue() {
     final list = List<LivenessChallenge>.from(config.challengeSequence);
@@ -224,8 +274,7 @@ class ChallengeDirector {
   void _startTickTimer() {
     _tickTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (_isDisposed) return;
-      final progress =
-          _remainingSeconds / config.sessionDurationSeconds;
+      final progress = _remainingSeconds / config.sessionDurationSeconds;
       _timerController.add(progress.clamp(0.0, 1.0));
     });
   }
@@ -245,14 +294,16 @@ class ChallengeDirector {
       _timerController.add(0.0);
     }
 
-    _stateController.add(ChallengeDirectorState(
-      activeChallenge: _queue[_activeIndex.clamp(0, _queue.length - 1)],
-      activeIndex: _activeIndex.clamp(0, _queue.length - 1),
-      totalChallenges: _queue.length,
-      completedCount: completedCount,
-      isComplete: true,
-      result: result,
-    ));
+    _stateController.add(
+      ChallengeDirectorState(
+        activeChallenge: _queue[_activeIndex.clamp(0, _queue.length - 1)],
+        activeIndex: _activeIndex.clamp(0, _queue.length - 1),
+        totalChallenges: _queue.length,
+        completedCount: completedCount,
+        isComplete: true,
+        result: result,
+      ),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -261,13 +312,15 @@ class ChallengeDirector {
 
   void _emitState() {
     if (_isDisposed) return;
-    _stateController.add(ChallengeDirectorState(
-      activeChallenge: _queue[_activeIndex],
-      activeIndex: _activeIndex,
-      totalChallenges: _queue.length,
-      completedCount: completedCount,
-      isComplete: false,
-      result: null,
-    ));
+    _stateController.add(
+      ChallengeDirectorState(
+        activeChallenge: _queue[_activeIndex],
+        activeIndex: _activeIndex,
+        totalChallenges: _queue.length,
+        completedCount: completedCount,
+        isComplete: false,
+        result: null,
+      ),
+    );
   }
 }

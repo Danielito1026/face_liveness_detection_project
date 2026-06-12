@@ -159,6 +159,20 @@ class FaceLivenessStyle {
   /// Text style for the dialog action button.
   final TextStyle dialogButtonStyle;
 
+  // --- "No face detected" hint ---
+
+  /// Background color of the "no face detected" hint banner.
+  final Color noFaceHintBackgroundColor;
+
+  /// Text style for the "no face detected" hint message.
+  final TextStyle noFaceHintTextStyle;
+
+  /// Icon shown alongside the "no face detected" hint message.
+  final IconData noFaceHintIcon;
+
+  /// Message shown when no face has been detected for a sustained period.
+  final String noFaceHintMessage;
+
   // --- Challenge display overrides ---
 
   /// Per-challenge icon and instruction overrides.
@@ -199,6 +213,10 @@ class FaceLivenessStyle {
     required this.dialogTitleStyle,
     required this.dialogBodyStyle,
     required this.dialogButtonStyle,
+    required this.noFaceHintBackgroundColor,
+    required this.noFaceHintTextStyle,
+    required this.noFaceHintIcon,
+    required this.noFaceHintMessage,
     this.challengeDisplayMap = const {},
   });
 
@@ -240,6 +258,12 @@ class FaceLivenessStyle {
       dialogTitleStyle: FaceLivenessTextStyles.dialogTitle,
       dialogBodyStyle: FaceLivenessTextStyles.dialogBody,
       dialogButtonStyle: FaceLivenessTextStyles.dialogButton,
+
+      // No face detected hint
+      noFaceHintBackgroundColor: FaceLivenessColors.dialogBackground,
+      noFaceHintTextStyle: FaceLivenessTextStyles.challengeSubtitle,
+      noFaceHintIcon: Icons.face_retouching_off_outlined,
+      noFaceHintMessage: 'No face detected. Center your face in the frame.',
 
       // No challenge display overrides — use FaceLivenessTheme.challengeDisplayDefaults
       challengeDisplayMap: const {},
@@ -291,6 +315,10 @@ class FaceLivenessStyle {
     TextStyle? dialogTitleStyle,
     TextStyle? dialogBodyStyle,
     TextStyle? dialogButtonStyle,
+    Color? noFaceHintBackgroundColor,
+    TextStyle? noFaceHintTextStyle,
+    IconData? noFaceHintIcon,
+    String? noFaceHintMessage,
     Map<LivenessChallenge, ChallengeDisplayConfig>? challengeDisplayMap,
   }) {
     return FaceLivenessStyle(
@@ -319,6 +347,11 @@ class FaceLivenessStyle {
       dialogTitleStyle: dialogTitleStyle ?? this.dialogTitleStyle,
       dialogBodyStyle: dialogBodyStyle ?? this.dialogBodyStyle,
       dialogButtonStyle: dialogButtonStyle ?? this.dialogButtonStyle,
+      noFaceHintBackgroundColor:
+          noFaceHintBackgroundColor ?? this.noFaceHintBackgroundColor,
+      noFaceHintTextStyle: noFaceHintTextStyle ?? this.noFaceHintTextStyle,
+      noFaceHintIcon: noFaceHintIcon ?? this.noFaceHintIcon,
+      noFaceHintMessage: noFaceHintMessage ?? this.noFaceHintMessage,
       challengeDisplayMap: challengeDisplayMap ?? this.challengeDisplayMap,
     );
   }
