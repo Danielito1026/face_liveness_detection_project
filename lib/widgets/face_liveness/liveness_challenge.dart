@@ -17,7 +17,8 @@ enum LivenessChallenge {
   turnLeft('turnLeft'),
   turnRight('turnRight'),
   lookUp('lookUp'),
-  lookDown('lookDown');
+  lookDown('lookDown'),
+  faceOnly('faceOnly');
 
   const LivenessChallenge(this.value);
 

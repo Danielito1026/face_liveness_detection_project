@@ -34,7 +34,7 @@ class FaceLivenessColors {
   static const Color whiteLow = Color(0x80FFFFFF); // 50% white
 
   // Overlay tint on camera preview (the dim area outside the cutout)
-  static const Color cameraOverlay = Color(0xCC0D1B2A); // 80% navyDark
+  static const Color cameraOverlay = Color.fromARGB(204, 43, 48, 54); // 80% navyDark
 
   // Timer bar
   static const Color timerActive = crimson;

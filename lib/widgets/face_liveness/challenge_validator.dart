@@ -187,6 +187,7 @@ class ChallengeValidator {
       LivenessChallenge.turnRight => _evaluateTurnRight(face),
       LivenessChallenge.lookUp => _evaluateLookUp(face),
       LivenessChallenge.lookDown => _evaluateLookDown(face),
+      LivenessChallenge.faceOnly => _evaluateBlink(face),
     };
   }
 
