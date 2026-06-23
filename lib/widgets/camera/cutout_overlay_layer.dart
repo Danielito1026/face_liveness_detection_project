@@ -79,7 +79,7 @@ class _CutoutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CutoutPainter oldDelegate) =>
-      oldDelegate.style.cutoutShape != oldDelegate.style.cutoutShape ||
+      oldDelegate.style.cutoutShape != style.cutoutShape ||
       oldDelegate.style.cameraOverlayColor != style.cameraOverlayColor ||
       oldDelegate.style.frameBorderColor != style.frameBorderColor;
 }

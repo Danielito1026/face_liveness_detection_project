@@ -1,4 +1,5 @@
 import 'package:face_detect_trial/pages/liveness_runner_screen.dart';
+import 'package:face_detect_trial/pages/qr_scanner_page.dart';
 import 'package:face_detect_trial/widgets/face_liveness/face_liveness_config.dart';
 import 'package:face_detect_trial/widgets/detection_styles/detection_style.dart';
 import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
@@ -46,8 +47,7 @@ class LivenessDemoScreen extends StatelessWidget {
                 description:
                     'Dark navy + crimson. Oval cutout.\n'
                     'DetectionStyle.defaults()',
-                onTap: () =>
-                    _launch(context, style: DetectionStyle.defaults()),
+                onTap: () => _launch(context, style: DetectionStyle.defaults()),
               ),
 
               const SizedBox(height: 16),
@@ -85,6 +85,18 @@ class LivenessDemoScreen extends StatelessWidget {
                   context,
                   style: DetectionStyle.defaults(),
                   useCustomOverlay: true,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              _DemoTile(
+                label: 'QR Code Scanner Page',
+                description:
+                    'Default style + custom overlay widget per challenge',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => QrScannerPage()),
                 ),
               ),
             ],
@@ -139,10 +151,7 @@ class _DemoTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: DetectionTextStyles.challengeInstruction,
-                  ),
+                  Text(label, style: DetectionTextStyles.challengeInstruction),
                   const SizedBox(height: 4),
                   Text(
                     description,
