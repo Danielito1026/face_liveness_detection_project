@@ -122,7 +122,6 @@ class _SampleCustomOverlay extends StatelessWidget {
       ),
       LivenessChallenge.lookUp => (Icons.arrow_upward_rounded, 'Look Up'),
       LivenessChallenge.lookDown => (Icons.arrow_downward_rounded, 'Look Down'),
-      LivenessChallenge.faceOnly => (Icons.face, 'Face'),
     };
 
     return Container(
