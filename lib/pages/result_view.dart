@@ -1,4 +1,4 @@
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_theme.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
 import 'package:flutter/material.dart';
 
 class ResultView extends StatelessWidget {
@@ -31,13 +31,13 @@ class ResultView extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               title,
-              style: FaceLivenessTextStyles.dialogTitle,
+              style: DetectionTextStyles.dialogTitle,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               message,
-              style: FaceLivenessTextStyles.dialogBody,
+              style: DetectionTextStyles.dialogBody,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -47,15 +47,15 @@ class ResultView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: FaceLivenessColors.crimson,
+                  backgroundColor: DetectionColors.crimson,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
                   actionLabel,
-                  style: FaceLivenessTextStyles.dialogButton.copyWith(
-                    color: FaceLivenessColors.white,
+                  style: DetectionTextStyles.dialogButton.copyWith(
+                    color: DetectionColors.white,
                   ),
                 ),
               ),

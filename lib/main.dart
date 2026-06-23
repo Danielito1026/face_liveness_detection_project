@@ -1,7 +1,6 @@
 import 'package:face_detect_trial/widgets/permission/permission_gate.dart';
 import 'package:flutter/material.dart';
-import 'widgets/face_liveness/face_liveness_theme.dart';
-
+import 'widgets/detection_styles/detection_theme.dart';
 
 void main() {
   runApp(const SampleApp());
@@ -16,7 +15,7 @@ class SampleApp extends StatelessWidget {
       title: 'Face Liveness Sample',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: FaceLivenessColors.navyDark,
+        scaffoldBackgroundColor: DetectionColors.navyDark,
       ),
       home: const PermissionGate(),
     );

@@ -18,8 +18,8 @@
 //   )
 
 import 'package:flutter/material.dart';
-import 'face_liveness_style.dart';
-import 'face_liveness_theme.dart';
+import '../detection_styles/detection_style.dart';
+import '../detection_styles/detection_theme.dart';
 
 class SessionTimerBar extends StatelessWidget {
   /// Remaining time as a fraction: 1.0 = full, 0.0 = expired.
@@ -27,7 +27,7 @@ class SessionTimerBar extends StatelessWidget {
   final double progress;
 
   /// Style config — drives colors and bar height.
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   /// Progress fraction at which the bar switches to warning color.
   /// Default: 0.2 (20% remaining).
@@ -64,7 +64,7 @@ class SessionTimerBar extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return AnimatedContainer(
-                duration: FaceLivenessTheme.timerBarUpdateInterval,
+                duration: DetectionTheme.timerBarUpdateInterval,
                 curve: Curves.linear,
                 width: constraints.maxWidth * progress.clamp(0.0, 1.0),
                 decoration: BoxDecoration(

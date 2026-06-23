@@ -6,12 +6,12 @@
 //
 // Usage — use defaults (timekeeping app look):
 //
-//   FaceLivenessWidget(style: FaceLivenessStyle.defaults(), ...)
+//   FaceLivenessWidget(style: DetectionStyle.defaults(), ...)
 //
 // Usage — override specific values in another project:
 //
 //   FaceLivenessWidget(
-//     style: FaceLivenessStyle.defaults().copyWith(
+//     style: DetectionStyle.defaults().copyWith(
 //       frameBorderColor: Colors.blue,
 //       cutoutShape: RectCutout(borderRadius: 16),
 //     ),
@@ -21,7 +21,7 @@
 // Usage — full custom style from scratch:
 //
 //   FaceLivenessWidget(
-//     style: FaceLivenessStyle(
+//     style: DetectionStyle(
 //       cutoutShape: OvalCutout(),
 //       cameraOverlayColor: Colors.black87,
 //       ...
@@ -30,8 +30,8 @@
 //   )
 
 import 'package:flutter/material.dart';
-import 'face_liveness_theme.dart';
-import 'liveness_challenge.dart';
+import 'detection_theme.dart';
+import '../face_liveness/liveness_challenge.dart';
 
 // ---------------------------------------------------------------------------
 // Cutout shape
@@ -52,8 +52,8 @@ class OvalCutout extends CutoutShape {
   final double heightFactor;
 
   const OvalCutout({
-    this.widthFactor = FaceLivenessTheme.cutoutWidthFactor,
-    this.heightFactor = FaceLivenessTheme.cutoutHeightFactor,
+    this.widthFactor = CutoutDefaults.cutoutWidthFactor,
+    this.heightFactor = CutoutDefaults.cutoutHeightFactor,
   });
 }
 
@@ -69,9 +69,9 @@ class RectCutout extends CutoutShape {
   final double borderRadius;
 
   const RectCutout({
-    this.widthFactor = FaceLivenessTheme.cutoutWidthFactor,
-    this.heightFactor = FaceLivenessTheme.cutoutHeightFactor,
-    this.borderRadius = FaceLivenessTheme.rectBorderRadius,
+    this.widthFactor = CutoutDefaults.cutoutWidthFactor,
+    this.heightFactor = CutoutDefaults.cutoutHeightFactor,
+    this.borderRadius = CutoutDefaults.rectBorderRadius,
   });
 }
 
@@ -79,7 +79,7 @@ class RectCutout extends CutoutShape {
 // Style model
 // ---------------------------------------------------------------------------
 
-class FaceLivenessStyle {
+class DetectionStyle {
   // --- Camera frame ---
 
   /// Shape of the transparent cutout over the camera preview.
@@ -176,7 +176,7 @@ class FaceLivenessStyle {
   // --- Challenge display overrides ---
 
   /// Per-challenge icon and instruction overrides.
-  /// Entries here are merged with [FaceLivenessTheme.challengeDisplayDefaults].
+  /// Entries here are merged with [DetectionTheme.challengeDisplayDefaults].
   /// You only need to provide the challenges you want to override.
   ///
   /// Example — change the smile instruction text:
@@ -189,7 +189,7 @@ class FaceLivenessStyle {
   ///   }
   final Map<LivenessChallenge, ChallengeDisplayConfig> challengeDisplayMap;
 
-  const FaceLivenessStyle({
+  const DetectionStyle({
     required this.cutoutShape,
     required this.cameraOverlayColor,
     required this.frameBorderColor,
@@ -224,48 +224,48 @@ class FaceLivenessStyle {
   // Default factory — timekeeping app look (dark navy + crimson)
   // ---------------------------------------------------------------------------
 
-  factory FaceLivenessStyle.defaults() {
-    return FaceLivenessStyle(
+  factory DetectionStyle.defaults() {
+    return DetectionStyle(
       // Camera frame
       cutoutShape: const OvalCutout(),
-      cameraOverlayColor: FaceLivenessColors.cameraOverlay,
-      frameBorderColor: FaceLivenessColors.crimson,
-      frameBorderWidth: FaceLivenessTheme.frameBorderWidth,
+      cameraOverlayColor: DetectionColors.cameraOverlay,
+      frameBorderColor: DetectionColors.crimson,
+      frameBorderWidth: CutoutDefaults.frameBorderWidth,
 
       // Challenge overlay panel
-      overlayPanelColor: FaceLivenessColors.glassFill,
-      overlayPanelBorderColor: FaceLivenessColors.glassBorder,
-      challengeIconColor: FaceLivenessColors.crimsonLight,
+      overlayPanelColor: DetectionColors.glassFill,
+      overlayPanelBorderColor: DetectionColors.glassBorder,
+      challengeIconColor: DetectionColors.crimsonLight,
       challengeIconSize: 36,
-      instructionTextStyle: FaceLivenessTextStyles.challengeInstruction,
-      subtitleTextStyle: FaceLivenessTextStyles.challengeSubtitle,
+      instructionTextStyle: DetectionTextStyles.challengeInstruction,
+      subtitleTextStyle: DetectionTextStyles.challengeSubtitle,
 
       // Timer bar
-      timerBarActiveColor: FaceLivenessColors.timerActive,
-      timerBarWarningColor: FaceLivenessColors.timerWarning,
-      timerBarTrackColor: FaceLivenessColors.timerTrack,
-      timerBarHeight: FaceLivenessTheme.timerBarHeight,
+      timerBarActiveColor: DetectionColors.timerActive,
+      timerBarWarningColor: DetectionColors.timerWarning,
+      timerBarTrackColor: DetectionColors.timerTrack,
+      timerBarHeight: DetectionTheme.timerBarHeight,
 
       // Progress dots
-      dotCompleteColor: FaceLivenessColors.dotComplete,
-      dotActiveColor: FaceLivenessColors.dotActive,
-      dotInactiveColor: FaceLivenessColors.dotInactive,
-      dotSize: FaceLivenessTheme.dotSize,
+      dotCompleteColor: DetectionColors.dotComplete,
+      dotActiveColor: DetectionColors.dotActive,
+      dotInactiveColor: DetectionColors.dotInactive,
+      dotSize: DetectionTheme.dotSize,
 
       // Dialog
-      dialogBackgroundColor: FaceLivenessColors.dialogBackground,
-      dialogBorderColor: FaceLivenessColors.dialogBorder,
-      dialogTitleStyle: FaceLivenessTextStyles.dialogTitle,
-      dialogBodyStyle: FaceLivenessTextStyles.dialogBody,
-      dialogButtonStyle: FaceLivenessTextStyles.dialogButton,
+      dialogBackgroundColor: DetectionColors.dialogBackground,
+      dialogBorderColor: DetectionColors.dialogBorder,
+      dialogTitleStyle: DetectionTextStyles.dialogTitle,
+      dialogBodyStyle: DetectionTextStyles.dialogBody,
+      dialogButtonStyle: DetectionTextStyles.dialogButton,
 
       // No face detected hint
-      noFaceHintBackgroundColor: FaceLivenessColors.dialogBackground,
-      noFaceHintTextStyle: FaceLivenessTextStyles.challengeSubtitle,
+      noFaceHintBackgroundColor: DetectionColors.dialogBackground,
+      noFaceHintTextStyle: DetectionTextStyles.challengeSubtitle,
       noFaceHintIcon: Icons.face_retouching_off_outlined,
       noFaceHintMessage: 'No face detected. Center your face in the frame.',
 
-      // No challenge display overrides — use FaceLivenessTheme.challengeDisplayDefaults
+      // No challenge display overrides — use DetectionTheme.challengeDisplayDefaults
       challengeDisplayMap: const {},
     );
   }
@@ -275,9 +275,9 @@ class FaceLivenessStyle {
   // ---------------------------------------------------------------------------
 
   /// Returns the display config for [challenge], applying any override from
-  /// [challengeDisplayMap] on top of [FaceLivenessTheme.challengeDisplayDefaults].
+  /// [challengeDisplayMap] on top of [DetectionTheme.challengeDisplayDefaults].
   ChallengeDisplayConfig resolveDisplayConfig(LivenessChallenge challenge) {
-    final base = FaceLivenessTheme.challengeDisplayDefaults[challenge]!;
+    final base = DetectionTheme.challengeDisplayDefaults[challenge]!;
     final override = challengeDisplayMap[challenge];
     if (override == null) return base;
     return base.copyWith(
@@ -291,7 +291,7 @@ class FaceLivenessStyle {
   // copyWith
   // ---------------------------------------------------------------------------
 
-  FaceLivenessStyle copyWith({
+  DetectionStyle copyWith({
     CutoutShape? cutoutShape,
     Color? cameraOverlayColor,
     Color? frameBorderColor,
@@ -321,7 +321,7 @@ class FaceLivenessStyle {
     String? noFaceHintMessage,
     Map<LivenessChallenge, ChallengeDisplayConfig>? challengeDisplayMap,
   }) {
-    return FaceLivenessStyle(
+    return DetectionStyle(
       cutoutShape: cutoutShape ?? this.cutoutShape,
       cameraOverlayColor: cameraOverlayColor ?? this.cameraOverlayColor,
       frameBorderColor: frameBorderColor ?? this.frameBorderColor,

@@ -7,7 +7,7 @@
 // Design decisions:
 //   - A function, not a Widget subclass. Called via showUnsupportedDeviceDialog()
 //     from FaceLivenessWidget's initState error handler.
-//   - Fully style-driven via FaceLivenessStyle — colors, text styles, button style.
+//   - Fully style-driven via DetectionStyle — colors, text styles, button style.
 //   - Not dismissible by tapping outside (barrierDismissible: false).
 //     User must explicitly tap the action button.
 //   - Supports an optional [onContactHR] callback. If provided, a "Contact HR"
@@ -22,8 +22,8 @@
 //   );
 
 import 'package:flutter/material.dart';
-import 'face_liveness_style.dart';
-import 'face_liveness_theme.dart';
+import '../detection_styles/detection_style.dart';
+import '../detection_styles/detection_theme.dart';
 
 /// Shows the unsupported device dialog.
 ///
@@ -32,7 +32,7 @@ import 'face_liveness_theme.dart';
 /// is shown so the user knows how to resolve the issue.
 void showUnsupportedDeviceDialog({
   required BuildContext context,
-  required FaceLivenessStyle style,
+  required DetectionStyle style,
   required VoidCallback onGoBack,
   VoidCallback? onContactHR,
 }) {
@@ -53,7 +53,7 @@ void showUnsupportedDeviceDialog({
 // ---------------------------------------------------------------------------
 
 class _UnsupportedDeviceDialog extends StatelessWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
   final VoidCallback onGoBack;
   final VoidCallback? onContactHR;
 
@@ -78,7 +78,7 @@ class _UnsupportedDeviceDialog extends StatelessWidget {
 }
 
 class _DialogContent extends StatelessWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
   final VoidCallback onGoBack;
   final VoidCallback? onContactHR;
 
@@ -132,7 +132,7 @@ class _DialogContent extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _DialogIcon extends StatelessWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _DialogIcon({required this.style});
 
@@ -143,23 +143,23 @@ class _DialogIcon extends StatelessWidget {
       height: 64,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: FaceLivenessColors.crimsonGlow,
+        color: DetectionColors.crimsonGlow,
         border: Border.all(
-          color: FaceLivenessColors.crimson.withValues(alpha:0.4),
+          color: DetectionColors.crimson.withValues(alpha:0.4),
           width: 1.5,
         ),
       ),
       child: const Icon(
         Icons.no_photography_outlined,
         size: 30,
-        color: FaceLivenessColors.crimsonLight,
+        color: DetectionColors.crimsonLight,
       ),
     );
   }
 }
 
 class _DialogTitle extends StatelessWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _DialogTitle({required this.style});
 
@@ -174,7 +174,7 @@ class _DialogTitle extends StatelessWidget {
 }
 
 class _DialogBody extends StatelessWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _DialogBody({required this.style});
 
@@ -191,7 +191,7 @@ class _DialogBody extends StatelessWidget {
 }
 
 class _DialogActions extends StatelessWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
   final VoidCallback onGoBack;
   final VoidCallback? onContactHR;
 
@@ -231,7 +231,7 @@ class _DialogActions extends StatelessWidget {
 
 class _DialogButton extends StatelessWidget {
   final String label;
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
   final bool isPrimary;
   final VoidCallback onTap;
 
@@ -250,8 +250,8 @@ class _DialogButton extends StatelessWidget {
         child: ElevatedButton(
           onPressed: onTap,
           style: ElevatedButton.styleFrom(
-            backgroundColor: FaceLivenessColors.crimson,
-            foregroundColor: FaceLivenessColors.white,
+            backgroundColor: DetectionColors.crimson,
+            foregroundColor: DetectionColors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -260,7 +260,7 @@ class _DialogButton extends StatelessWidget {
           child: Text(
             label,
             style: style.dialogButtonStyle.copyWith(
-              color: FaceLivenessColors.white,
+              color: DetectionColors.white,
             ),
           ),
         ),
@@ -273,9 +273,9 @@ class _DialogButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          foregroundColor: FaceLivenessColors.crimsonLight,
+          foregroundColor: DetectionColors.crimsonLight,
           side: BorderSide(
-            color: FaceLivenessColors.crimson.withValues(alpha:0.5),
+            color: DetectionColors.crimson.withValues(alpha:0.5),
             width: 1.0,
           ),
           shape: RoundedRectangleBorder(

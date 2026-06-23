@@ -33,7 +33,7 @@
 //
 //   FaceLivenessWidget(
 //     config: faceLivenessConfig,
-//     style: FaceLivenessStyle.defaults().copyWith(
+//     style: DetectionStyle.defaults().copyWith(
 //       cutoutShape: RectCutout(borderRadius: 16),
 //       frameBorderColor: Colors.blue,
 //     ),
@@ -65,8 +65,8 @@ import 'challenge_overlay.dart';
 import 'challenge_progress_dots.dart';
 import 'challenge_validator.dart';
 import 'face_liveness_config.dart';
-import 'face_liveness_style.dart';
-import 'face_liveness_theme.dart';
+import '../detection_styles/detection_style.dart';
+import '../detection_styles/detection_theme.dart';
 import 'liveness_challenge.dart';
 import 'no_face_hint.dart';
 import 'session_timer_bar.dart';
@@ -83,7 +83,7 @@ class FaceLivenessWidget extends StatefulWidget {
 
   /// Visual style. Defaults to the timekeeping app's dark navy/crimson look.
   /// Use copyWith() to override individual values for other projects.
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   /// Called when all challenges are passed within the session timer.
   /// Parent (FaceNotifier) should submit the session to the backend here.
@@ -119,36 +119,36 @@ class FaceLivenessWidget extends StatefulWidget {
 // Workaround: const default for style field
 // ---------------------------------------------------------------------------
 
-// FaceLivenessStyle.defaults() is a factory, so it can't be a const default
+// DetectionStyle.defaults() is a factory, so it can't be a const default
 // parameter. This private subclass bridges that gap cleanly.
-class _DefaultStyle extends FaceLivenessStyle {
+class _DefaultStyle extends DetectionStyle {
   const _DefaultStyle()
     : super(
         cutoutShape: const OvalCutout(),
-        cameraOverlayColor: FaceLivenessColors.cameraOverlay,
-        frameBorderColor: FaceLivenessColors.crimson,
-        frameBorderWidth: FaceLivenessTheme.frameBorderWidth,
-        overlayPanelColor: FaceLivenessColors.glassFill,
-        overlayPanelBorderColor: FaceLivenessColors.glassBorder,
-        challengeIconColor: FaceLivenessColors.crimsonLight,
+        cameraOverlayColor: DetectionColors.cameraOverlay,
+        frameBorderColor: DetectionColors.crimson,
+        frameBorderWidth: CutoutDefaults.frameBorderWidth,
+        overlayPanelColor: DetectionColors.glassFill,
+        overlayPanelBorderColor: DetectionColors.glassBorder,
+        challengeIconColor: DetectionColors.crimsonLight,
         challengeIconSize: 36,
-        instructionTextStyle: FaceLivenessTextStyles.challengeInstruction,
-        subtitleTextStyle: FaceLivenessTextStyles.challengeSubtitle,
-        timerBarActiveColor: FaceLivenessColors.timerActive,
-        timerBarWarningColor: FaceLivenessColors.timerWarning,
-        timerBarTrackColor: FaceLivenessColors.timerTrack,
-        timerBarHeight: FaceLivenessTheme.timerBarHeight,
-        dotCompleteColor: FaceLivenessColors.dotComplete,
-        dotActiveColor: FaceLivenessColors.dotActive,
-        dotInactiveColor: FaceLivenessColors.dotInactive,
-        dotSize: FaceLivenessTheme.dotSize,
-        dialogBackgroundColor: FaceLivenessColors.dialogBackground,
-        dialogBorderColor: FaceLivenessColors.dialogBorder,
-        dialogTitleStyle: FaceLivenessTextStyles.dialogTitle,
-        dialogBodyStyle: FaceLivenessTextStyles.dialogBody,
-        dialogButtonStyle: FaceLivenessTextStyles.dialogButton,
-        noFaceHintBackgroundColor: FaceLivenessColors.dialogBackground,
-        noFaceHintTextStyle: FaceLivenessTextStyles.challengeSubtitle,
+        instructionTextStyle: DetectionTextStyles.challengeInstruction,
+        subtitleTextStyle: DetectionTextStyles.challengeSubtitle,
+        timerBarActiveColor: DetectionColors.timerActive,
+        timerBarWarningColor: DetectionColors.timerWarning,
+        timerBarTrackColor: DetectionColors.timerTrack,
+        timerBarHeight: DetectionTheme.timerBarHeight,
+        dotCompleteColor: DetectionColors.dotComplete,
+        dotActiveColor: DetectionColors.dotActive,
+        dotInactiveColor: DetectionColors.dotInactive,
+        dotSize: DetectionTheme.dotSize,
+        dialogBackgroundColor: DetectionColors.dialogBackground,
+        dialogBorderColor: DetectionColors.dialogBorder,
+        dialogTitleStyle: DetectionTextStyles.dialogTitle,
+        dialogBodyStyle: DetectionTextStyles.dialogBody,
+        dialogButtonStyle: DetectionTextStyles.dialogButton,
+        noFaceHintBackgroundColor: DetectionColors.dialogBackground,
+        noFaceHintTextStyle: DetectionTextStyles.challengeSubtitle,
         noFaceHintIcon: Icons.face_retouching_off_outlined,
         noFaceHintMessage: 'No face detected. Center your face in the frame.',
       );
@@ -254,7 +254,7 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
 
       if (state.result == LivenessSessionResult.pass) {
         // Brief delay lets the success flash finish before notifying parent
-        Future.delayed(FaceLivenessTheme.successFlashDuration, () {
+        Future.delayed(DetectionTheme.successFlashDuration, () {
           if (mounted) widget.onPass();
         });
       } else {
@@ -319,7 +319,7 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
 
     // Show success flash
     setState(() => _showSuccessFlash = true);
-    await Future.delayed(FaceLivenessTheme.successFlashDuration);
+    await Future.delayed(DetectionTheme.successFlashDuration);
 
     if (!mounted) return;
     setState(() => _showSuccessFlash = false);
@@ -363,7 +363,7 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light, // white status bar icons on dark bg
       child: ColoredBox(
-        color: FaceLivenessColors.navyDark,
+        color: DetectionColors.navyDark,
         child: CameraInputStream(
           key: _cameraKey,
           lensDirection: CameraLensDirection.front,
@@ -379,7 +379,7 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
   Widget _buildLoadingView() {
     return const Center(
       child: CircularProgressIndicator(
-        color: FaceLivenessColors.crimson,
+        color: DetectionColors.crimson,
         strokeWidth: 2.5,
       ),
     );
@@ -435,7 +435,7 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
 class _ChallengeUiLayer extends StatelessWidget {
   final ChallengeDirectorState directorState;
   final double timerProgress;
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
   final Widget Function(LivenessChallenge)? challengeOverlayBuilder;
 
   const _ChallengeUiLayer({

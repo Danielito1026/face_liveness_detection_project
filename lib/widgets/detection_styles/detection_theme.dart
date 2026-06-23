@@ -10,14 +10,14 @@
 // source of truth.
 
 import 'package:flutter/material.dart';
-import 'liveness_challenge.dart';
+import '../face_liveness/liveness_challenge.dart';
 
 // ---------------------------------------------------------------------------
 // Color palette
 // ---------------------------------------------------------------------------
 
-class FaceLivenessColors {
-  FaceLivenessColors._();
+class DetectionColors {
+  DetectionColors._();
 
   // Core palette — timekeeping app identity
   static const Color navyDark = Color(0xFF0D1B2A);
@@ -34,7 +34,12 @@ class FaceLivenessColors {
   static const Color whiteLow = Color(0x80FFFFFF); // 50% white
 
   // Overlay tint on camera preview (the dim area outside the cutout)
-  static const Color cameraOverlay = Color.fromARGB(204, 43, 48, 54); // 80% navyDark
+  static const Color cameraOverlay = Color.fromARGB(
+    204,
+    43,
+    48,
+    54,
+  ); // 80% navyDark
 
   // Timer bar
   static const Color timerActive = crimson;
@@ -64,8 +69,8 @@ class FaceLivenessColors {
 // Text styles
 // ---------------------------------------------------------------------------
 
-class FaceLivenessTextStyles {
-  FaceLivenessTextStyles._();
+class DetectionTextStyles {
+  DetectionTextStyles._();
 
   static const String _fontFamily = 'Roboto'; // matches app-wide font
 
@@ -73,7 +78,7 @@ class FaceLivenessTextStyles {
     fontFamily: _fontFamily,
     fontSize: 20,
     fontWeight: FontWeight.w600,
-    color: FaceLivenessColors.whiteHigh,
+    color: DetectionColors.whiteHigh,
     letterSpacing: 0.3,
     height: 1.3,
   );
@@ -82,7 +87,7 @@ class FaceLivenessTextStyles {
     fontFamily: _fontFamily,
     fontSize: 13,
     fontWeight: FontWeight.w400,
-    color: FaceLivenessColors.whiteMid,
+    color: DetectionColors.whiteMid,
     letterSpacing: 0.2,
   );
 
@@ -90,7 +95,7 @@ class FaceLivenessTextStyles {
     fontFamily: _fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w500,
-    color: FaceLivenessColors.whiteMid,
+    color: DetectionColors.whiteMid,
     letterSpacing: 0.5,
   );
 
@@ -98,14 +103,14 @@ class FaceLivenessTextStyles {
     fontFamily: _fontFamily,
     fontSize: 18,
     fontWeight: FontWeight.w700,
-    color: FaceLivenessColors.whiteHigh,
+    color: DetectionColors.whiteHigh,
   );
 
   static const TextStyle dialogBody = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: FaceLivenessColors.whiteMid,
+    color: DetectionColors.whiteMid,
     height: 1.5,
   );
 
@@ -113,7 +118,7 @@ class FaceLivenessTextStyles {
     fontFamily: _fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: FaceLivenessColors.crimsonLight,
+    color: DetectionColors.crimsonLight,
     letterSpacing: 0.3,
   );
 }
@@ -155,8 +160,8 @@ class ChallengeDisplayConfig {
 // Default challenge display map
 // ---------------------------------------------------------------------------
 
-class FaceLivenessTheme {
-  FaceLivenessTheme._();
+class DetectionTheme {
+  DetectionTheme._();
 
   /// Default icon + text for each challenge.
   /// Used by ChallengeOverlay unless overridden in FaceLivenessStyle.
@@ -194,24 +199,7 @@ class FaceLivenessTheme {
     ),
   };
 
-  // ---------------------------------------------------------------------------
-  // Dimension constants
-  // ---------------------------------------------------------------------------
-
-  /// Oval cutout: fraction of screen width
-  static const double cutoutWidthFactor = 0.70;
-
-  /// Oval cutout: fraction of screen height
-  static const double cutoutHeightFactor = 0.42;
-
-  /// Camera frame border width (default)
-  static const double frameBorderWidth = 2.5;
-
-  /// Corner radius for RectCutout default
-  static const double rectBorderRadius = 24.0;
-
-  /// Challenge overlay panel height
-  static const double overlayPanelHeight = 120.0;
+  
 
   /// Session timer bar height
   static const double timerBarHeight = 6.0;
@@ -230,4 +218,25 @@ class FaceLivenessTheme {
   static const Duration overlayTransitionOut = Duration(milliseconds: 200);
   static const Duration successFlashDuration = Duration(milliseconds: 400);
   static const Duration timerBarUpdateInterval = Duration(milliseconds: 100);
+}
+
+class CutoutDefaults {
+  // ---------------------------------------------------------------------------
+  // Dimension constants
+  // ---------------------------------------------------------------------------
+
+  /// Oval cutout: fraction of screen width
+  static const double cutoutWidthFactor = 0.85;
+
+  /// Oval cutout: fraction of screen height
+  static const double cutoutHeightFactor = 0.50;
+
+  /// Camera frame border width (default)
+  static const double frameBorderWidth = 2.5;
+
+  /// Corner radius for RectCutout default
+  static const double rectBorderRadius = 24.0;
+
+  /// Challenge overlay panel height
+  static const double overlayPanelHeight = 120.0;
 }

@@ -18,8 +18,8 @@
 //   )
 
 import 'package:flutter/material.dart';
-import 'face_liveness_style.dart';
-import 'face_liveness_theme.dart';
+import '../detection_styles/detection_style.dart';
+import '../detection_styles/detection_theme.dart';
 
 class ChallengeProgressDots extends StatelessWidget {
   /// Total number of challenges in this session.
@@ -32,7 +32,7 @@ class ChallengeProgressDots extends StatelessWidget {
   final int activeIndex;
 
   /// Style config — drives dot colors and size.
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const ChallengeProgressDots({
     super.key,
@@ -52,7 +52,7 @@ class ChallengeProgressDots extends StatelessWidget {
 
         return Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: FaceLivenessTheme.dotSpacing / 2,
+            horizontal: DetectionTheme.dotSpacing / 2,
           ),
           child: isActive
               ? _PulsingDot(style: style)
@@ -72,7 +72,7 @@ class ChallengeProgressDots extends StatelessWidget {
 
 class _StaticDot extends StatelessWidget {
   final bool isComplete;
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _StaticDot({
     required this.isComplete,
@@ -103,7 +103,7 @@ class _StaticDot extends StatelessWidget {
           ? Icon(
               Icons.check,
               size: style.dotSize * 0.65,
-              color: FaceLivenessColors.white,
+              color: DetectionColors.white,
             )
           : null,
     );
@@ -115,7 +115,7 @@ class _StaticDot extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _PulsingDot extends StatefulWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _PulsingDot({required this.style});
 

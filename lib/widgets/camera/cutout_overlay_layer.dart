@@ -1,4 +1,4 @@
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_style.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_style.dart';
 import 'package:flutter/material.dart';
 
 // ---------------------------------------------------------------------------
@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 // ---------------------------------------------------------------------------
 
 class CutoutOverlayLayer extends StatelessWidget {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const CutoutOverlayLayer({super.key, required this.style});
 
@@ -20,7 +20,7 @@ class CutoutOverlayLayer extends StatelessWidget {
 }
 
 class _CutoutPainter extends CustomPainter {
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _CutoutPainter({required this.style});
 

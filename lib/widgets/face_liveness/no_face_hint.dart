@@ -11,10 +11,10 @@
 // Usage:
 //   NoFaceHint(visible: _noFaceHintVisible, style: widget.style)
 
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_theme.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
 import 'package:flutter/material.dart';
 
-import 'face_liveness_style.dart';
+import '../detection_styles/detection_style.dart';
 
 class NoFaceHint extends StatelessWidget {
   /// Whether the hint should be visible.
@@ -22,7 +22,7 @@ class NoFaceHint extends StatelessWidget {
   final bool visible;
 
   /// Style config — drives background color, text style, icon, and message.
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const NoFaceHint({super.key, required this.visible, required this.style});
 
@@ -58,7 +58,7 @@ class NoFaceHint extends StatelessWidget {
                   Icon(
                     style.noFaceHintIcon,
                     size: 18,
-                    color: FaceLivenessColors.crimson,
+                    color: DetectionColors.crimson,
                   ),
                   const SizedBox(width: 8),
                   Flexible(

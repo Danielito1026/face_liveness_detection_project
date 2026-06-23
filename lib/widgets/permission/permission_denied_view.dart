@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_theme.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
 
 class PermissionDeniedView extends StatelessWidget {
   final String message;
@@ -24,12 +24,12 @@ class PermissionDeniedView extends StatelessWidget {
             const Icon(
               Icons.camera_alt_outlined,
               size: 48,
-              color: FaceLivenessColors.crimson,
+              color: DetectionColors.crimson,
             ),
             const SizedBox(height: 20),
             Text(
               message,
-              style: FaceLivenessTextStyles.dialogBody,
+              style: DetectionTextStyles.dialogBody,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 28),
@@ -39,15 +39,15 @@ class PermissionDeniedView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: FaceLivenessColors.crimson,
+                  backgroundColor: DetectionColors.crimson,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
                   actionLabel,
-                  style: FaceLivenessTextStyles.dialogButton.copyWith(
-                    color: FaceLivenessColors.white,
+                  style: DetectionTextStyles.dialogButton.copyWith(
+                    color: DetectionColors.white,
                   ),
                 ),
               ),

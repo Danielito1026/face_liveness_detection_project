@@ -2,7 +2,7 @@ import 'package:face_detect_trial/pages/liveness_demo_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:face_detect_trial/widgets/permission/permission_denied_view.dart';
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_theme.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
 
 // ---------------------------------------------------------------------------
 // Checks camera permission before navigating to the demo screen.
@@ -61,25 +61,25 @@ class _PermissionGateState extends State<PermissionGate> {
     return Scaffold(
       body: switch (_status) {
         _PermissionStatus.checking => const Center(
-            child: CircularProgressIndicator(
-              color: FaceLivenessColors.crimson,
-              strokeWidth: 2.5,
-            ),
+          child: CircularProgressIndicator(
+            color: DetectionColors.crimson,
+            strokeWidth: 2.5,
           ),
+        ),
         _PermissionStatus.denied => PermissionDeniedView(
-            message: 'Camera access is required for face verification.',
-            actionLabel: 'Try Again',
-            onAction: _checkPermission,
-          ),
+          message: 'Camera access is required for face verification.',
+          actionLabel: 'Try Again',
+          onAction: _checkPermission,
+        ),
         _PermissionStatus.permanentlyDenied => PermissionDeniedView(
-            message:
-                'Camera access was permanently denied. '
-                'Enable it in your device settings to continue.',
-            actionLabel: 'Open Settings',
-            onAction: () async {
-              await openAppSettings();
-            },
-          ),
+          message:
+              'Camera access was permanently denied. '
+              'Enable it in your device settings to continue.',
+          actionLabel: 'Open Settings',
+          onAction: () async {
+            await openAppSettings();
+          },
+        ),
       },
     );
   }

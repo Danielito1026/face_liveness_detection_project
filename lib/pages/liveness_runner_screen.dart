@@ -1,14 +1,14 @@
 import 'package:face_detect_trial/pages/result_view.dart';
 import 'package:face_detect_trial/widgets/face_liveness/face_liveness_config.dart';
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_style.dart';
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_theme.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_style.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
 import 'package:face_detect_trial/widgets/face_liveness/face_liveness_widget.dart';
 import 'package:face_detect_trial/widgets/face_liveness/liveness_challenge.dart';
 import 'package:flutter/material.dart';
 
 class LivenessRunnerScreen extends StatefulWidget {
   final FaceLivenessConfig config;
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
   final bool useCustomOverlay;
 
   const LivenessRunnerScreen({
@@ -79,7 +79,7 @@ class _LivenessRunnerScreenState extends State<LivenessRunnerScreen> {
 
         _SessionOutcome.timedOut => ResultView(
           icon: Icons.timer_off_outlined,
-          iconColor: FaceLivenessColors.timerWarning,
+          iconColor: DetectionColors.timerWarning,
           title: 'Time\'s Up',
           message:
               'Session expired. In the real app, FaceNotifier '

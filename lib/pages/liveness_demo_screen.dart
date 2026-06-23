@@ -1,7 +1,7 @@
 import 'package:face_detect_trial/pages/liveness_runner_screen.dart';
 import 'package:face_detect_trial/widgets/face_liveness/face_liveness_config.dart';
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_style.dart';
-import 'package:face_detect_trial/widgets/face_liveness/face_liveness_theme.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_style.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
 import 'package:face_detect_trial/widgets/face_liveness/liveness_challenge.dart';
 import 'package:flutter/material.dart';
 
@@ -31,12 +31,12 @@ class LivenessDemoScreen extends StatelessWidget {
             children: [
               Text(
                 'Face Liveness — Style Demos',
-                style: FaceLivenessTextStyles.dialogTitle,
+                style: DetectionTextStyles.dialogTitle,
               ),
               const SizedBox(height: 8),
               Text(
                 'Tap a variant to launch the liveness widget with that style.',
-                style: FaceLivenessTextStyles.dialogBody,
+                style: DetectionTextStyles.dialogBody,
               ),
               const SizedBox(height: 40),
 
@@ -45,9 +45,9 @@ class LivenessDemoScreen extends StatelessWidget {
                 label: 'Default Style',
                 description:
                     'Dark navy + crimson. Oval cutout.\n'
-                    'FaceLivenessStyle.defaults()',
+                    'DetectionStyle.defaults()',
                 onTap: () =>
-                    _launch(context, style: FaceLivenessStyle.defaults()),
+                    _launch(context, style: DetectionStyle.defaults()),
               ),
 
               const SizedBox(height: 16),
@@ -57,11 +57,15 @@ class LivenessDemoScreen extends StatelessWidget {
                 label: 'copyWith Override',
                 description:
                     'Same defaults, rect cutout, blue border.\n'
-                    'FaceLivenessStyle.defaults().copyWith(...)',
+                    'DetectionStyle.defaults().copyWith(...)',
                 onTap: () => _launch(
                   context,
-                  style: FaceLivenessStyle.defaults().copyWith(
-                    cutoutShape: const RectCutout(borderRadius: 20),
+                  style: DetectionStyle.defaults().copyWith(
+                    cutoutShape: const RectCutout(
+                      widthFactor: .80,
+                      heightFactor: .40,
+                      borderRadius: 20,
+                    ),
                     frameBorderColor: const Color(0xFF2196F3),
                     timerBarActiveColor: const Color(0xFF2196F3),
                     dotCompleteColor: const Color(0xFF2196F3),
@@ -79,7 +83,7 @@ class LivenessDemoScreen extends StatelessWidget {
                     'challengeOverlayBuilder: (c) => MyOverlay(c)',
                 onTap: () => _launch(
                   context,
-                  style: FaceLivenessStyle.defaults(),
+                  style: DetectionStyle.defaults(),
                   useCustomOverlay: true,
                 ),
               ),
@@ -92,7 +96,7 @@ class LivenessDemoScreen extends StatelessWidget {
 
   void _launch(
     BuildContext context, {
-    required FaceLivenessStyle style,
+    required DetectionStyle style,
     bool useCustomOverlay = false,
   }) {
     Navigator.of(context).push(
@@ -125,9 +129,9 @@ class _DemoTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: FaceLivenessColors.navyMid,
+          color: DetectionColors.navyMid,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: FaceLivenessColors.glassBorder),
+          border: Border.all(color: DetectionColors.glassBorder),
         ),
         child: Row(
           children: [
@@ -137,12 +141,12 @@ class _DemoTile extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: FaceLivenessTextStyles.challengeInstruction,
+                    style: DetectionTextStyles.challengeInstruction,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: FaceLivenessTextStyles.challengeSubtitle,
+                    style: DetectionTextStyles.challengeSubtitle,
                   ),
                 ],
               ),
@@ -150,7 +154,7 @@ class _DemoTile extends StatelessWidget {
             const Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,
-              color: FaceLivenessColors.whiteMid,
+              color: DetectionColors.whiteMid,
             ),
           ],
         ),

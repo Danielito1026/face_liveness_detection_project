@@ -11,7 +11,7 @@
 //
 // The panel uses a glassmorphism treatment by default (semi-transparent
 // background + frosted border) matching the timekeeping app's design language.
-// All colors and text styles come from FaceLivenessStyle — no hardcoded values.
+// All colors and text styles come from DetectionStyle — no hardcoded values.
 //
 // Usage:
 //   ChallengeOverlay(
@@ -23,8 +23,8 @@
 // FaceLivenessWidget instead of using this widget directly.
 
 import 'package:flutter/material.dart';
-import 'face_liveness_style.dart';
-import 'face_liveness_theme.dart';
+import '../detection_styles/detection_style.dart';
+import '../detection_styles/detection_theme.dart';
 import 'liveness_challenge.dart';
 
 class ChallengeOverlay extends StatelessWidget {
@@ -32,7 +32,7 @@ class ChallengeOverlay extends StatelessWidget {
   final LivenessChallenge challenge;
 
   /// Style config — drives all colors, text styles, and icon appearance.
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const ChallengeOverlay({
     super.key,
@@ -43,8 +43,8 @@ class ChallengeOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: FaceLivenessTheme.overlayTransitionIn,
-      reverseDuration: FaceLivenessTheme.overlayTransitionOut,
+      duration: DetectionTheme.overlayTransitionIn,
+      reverseDuration: DetectionTheme.overlayTransitionOut,
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) {
@@ -66,7 +66,7 @@ class ChallengeOverlay extends StatelessWidget {
 
 class _OverlayPanel extends StatelessWidget {
   final LivenessChallenge challenge;
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _OverlayPanel({
     super.key,
@@ -116,7 +116,7 @@ class _OverlayPanel extends StatelessWidget {
 
 class _ChallengeIcon extends StatefulWidget {
   final IconData iconData;
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _ChallengeIcon({
     required this.iconData,
@@ -160,7 +160,7 @@ class _ChallengeIconState extends State<_ChallengeIcon>
         height: 52,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: FaceLivenessColors.crimsonGlow,
+          color: DetectionColors.crimsonGlow,
           border: Border.all(
             color: widget.style.challengeIconColor.withValues(alpha: 0.35),
             width: 1.5,
@@ -183,7 +183,7 @@ class _ChallengeIconState extends State<_ChallengeIcon>
 class _ChallengeText extends StatelessWidget {
   final String instruction;
   final String? subtitle;
-  final FaceLivenessStyle style;
+  final DetectionStyle style;
 
   const _ChallengeText({
     required this.instruction,
@@ -234,7 +234,7 @@ class SuccessFlash extends StatelessWidget {
       duration: const Duration(milliseconds: 150),
       child: visible
           ? Container(
-              color: FaceLivenessColors.successFlash,
+              color: DetectionColors.successFlash,
             )
           : const SizedBox.shrink(),
     );
