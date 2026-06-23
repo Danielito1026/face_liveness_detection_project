@@ -70,7 +70,7 @@ import '../detection_styles/detection_theme.dart';
 import 'liveness_challenge.dart';
 import 'no_face_hint.dart';
 import 'session_timer_bar.dart';
-import 'unsupported_device_prompt.dart';
+import '../camera/unsupported_device_prompt.dart';
 
 // ---------------------------------------------------------------------------
 // Widget

@@ -6,11 +6,11 @@
 // After returning from the result page, the scanner resets and is ready again.
 
 import 'package:face_detect_trial/pages/qr_result_page.dart';
-import 'package:face_detect_trial/widgets/detection_styles/detection_theme.dart';
+import 'package:face_detect_trial/widgets/camera/unsupported_device_prompt.dart';
+import 'package:face_detect_trial/widgets/detection_styles/detection_style.dart';
 import 'package:face_detect_trial/widgets/qr_scanner/qr_scanner_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-
 
 class QrScannerPage extends StatefulWidget {
   const QrScannerPage({super.key});
@@ -41,32 +41,12 @@ class _QrScannerPageState extends State<QrScannerPage> {
 
   void _onInitFailure() {
     if (!mounted) return;
-    showDialog(
+    showUnsupportedDeviceDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: DetectionColors.navyMid,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: DetectionColors.glassBorder),
-        ),
-        title: const Text(
-          'Camera Unavailable',
-          style: DetectionTextStyles.dialogTitle,
-        ),
-        content: const Text(
-          'Could not access the camera. Make sure camera permission is granted.',
-          style: DetectionTextStyles.dialogBody,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // close dialog
-              Navigator.pop(context); // leave scanner page
-            },
-            child: const Text('OK', style: DetectionTextStyles.dialogButton),
-          ),
-        ],
-      ),
+      style: DetectionStyle.defaults(),
+      onGoBack: () {
+        Navigator.of(context).pop();
+      },
     );
   }
 
