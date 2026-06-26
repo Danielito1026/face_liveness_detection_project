@@ -137,7 +137,8 @@ class CameraInputStreamState extends State<CameraInputStream>
         camera,
         widget.resolutionPreset,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.nv21, // required for ML Kit on Android
+        imageFormatGroup:
+            ImageFormatGroup.nv21, // required for ML Kit on Android
       );
 
       await controller.initialize();
@@ -186,6 +187,26 @@ class CameraInputStreamState extends State<CameraInputStream>
 
   /// Resumes a previously paused stream.
   void resumeStream() => _startStream();
+
+  /// Captures a still photo and returns it as an [XFile].
+  /// Automatically stops the image stream before capturing — [takePicture]
+  /// cannot run concurrently with [startImageStream] on most platforms.
+  /// The stream is NOT restarted after capture; the caller decides when to
+  /// resume or dispose. Returns null if the controller is not initialized
+  /// or if capture fails.
+  Future<XFile?> capture() async {
+    final controller = _controller;
+    if (controller == null || !_isInitialized) return null;
+
+    try {
+      // Must stop the stream before calling takePicture
+      _stopStream();
+      final photo = await controller.takePicture();
+      return photo;
+    } catch (_) {
+      return null;
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Frame conversion

@@ -8,6 +8,7 @@ class ResultView extends StatelessWidget {
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
+  final Widget? content;
 
   const ResultView({
     super.key,
@@ -17,6 +18,7 @@ class ResultView extends StatelessWidget {
     required this.message,
     required this.actionLabel,
     required this.onAction,
+    this.content,
   });
 
   @override
@@ -40,6 +42,7 @@ class ResultView extends StatelessWidget {
               style: DetectionTextStyles.dialogBody,
               textAlign: TextAlign.center,
             ),
+            if (content != null) ...[const SizedBox(height: 12), content!],
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -66,4 +69,3 @@ class ResultView extends StatelessWidget {
     );
   }
 }
-

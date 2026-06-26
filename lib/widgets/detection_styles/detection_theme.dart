@@ -199,8 +199,6 @@ class DetectionTheme {
     ),
   };
 
-  
-
   /// Session timer bar height
   static const double timerBarHeight = 6.0;
 
@@ -224,6 +222,7 @@ class CutoutDefaults {
   // ---------------------------------------------------------------------------
   // Dimension constants
   // ---------------------------------------------------------------------------
+  static const double cutoutVerticalCenter = 0.42;
 
   /// Oval cutout: fraction of screen width
   static const double cutoutWidthFactor = 0.85;

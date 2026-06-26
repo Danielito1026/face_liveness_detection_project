@@ -53,13 +53,12 @@
 // ---------------------------------------------------------------------------
 
 import 'dart:async';
+import 'dart:io';
 import 'package:camera/camera.dart' show CameraLensDirection;
 import 'package:face_detect_trial/widgets/camera/camera_input_stream.dart';
-import 'package:face_detect_trial/widgets/camera/cutout_overlay_layer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-
 import 'challenge_director.dart';
 import 'challenge_overlay.dart';
 import 'challenge_progress_dots.dart';
@@ -85,9 +84,12 @@ class FaceLivenessWidget extends StatefulWidget {
   /// Use copyWith() to override individual values for other projects.
   final DetectionStyle style;
 
-  /// Called when all challenges are passed within the session timer.
-  /// Parent (FaceNotifier) should submit the session to the backend here.
-  final VoidCallback onPass;
+  /// Called when all challenges are passed and a face photo has been captured.
+  /// The [File] contains the captured image path — pass it to the backend
+  /// (e.g. POST to /api/attendance/submit with the photo).
+  /// If capture fails for any reason, this is called with null so the parent
+  /// can decide whether to retry or proceed without the photo.
+  final void Function(File? photo) onPass;
 
   /// Called when the session timer expires before all challenges are complete.
   /// Parent (FaceNotifier) should handle retry counting here.
@@ -178,12 +180,20 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
   double _timerProgress = 1.0;
   bool _showSuccessFlash = false;
   bool _noFaceHintVisible = false;
+  bool _isCapturing = false;
+  int _captureCountdown = 0; // > 0 while countdown is ticking
 
   // --- Frame processing gate ---
   // Prevents overlapping async frame evaluations
   bool _isProcessingFrame = false;
   bool _sessionComplete = false;
   bool _validatorReady = false;
+
+  // --- Cutout geometry — computed once after first layout ---
+  // Used to validate that the face is inside the cutout before
+  // evaluating any challenge. Null until first LayoutBuilder callback.
+  Rect? _cutoutRect;
+  Size? _screenSize;
 
   // ---------------------------------------------------------------------------
   // Lifecycle
@@ -250,14 +260,14 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
 
     if (state.isComplete) {
       _sessionComplete = true;
-      _cameraKey.currentState?.pauseStream();
 
       if (state.result == LivenessSessionResult.pass) {
-        // Brief delay lets the success flash finish before notifying parent
-        Future.delayed(DetectionTheme.successFlashDuration, () {
-          if (mounted) widget.onPass();
-        });
+        // Success flash plays in _onChallengePass before we get here.
+        // Now capture the face photo, then notify the parent.
+        _captureAndNotify();
       } else {
+        // Timeout — stop stream immediately, no capture needed
+        _cameraKey.currentState?.pauseStream();
         widget.onTimeout();
       }
     }
@@ -273,6 +283,42 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
   void _onNoFaceChanged(bool noFaceDetected) {
     if (!mounted) return;
     setState(() => _noFaceHintVisible = noFaceDetected);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Face capture
+  // ---------------------------------------------------------------------------
+
+  /// Called when all challenges pass. Sequence:
+  ///   1. Tick down from config.captureDelaySeconds → 0, updating UI each second
+  ///   2. Show capturing spinner while takePicture() runs
+  ///   3. Notify parent with the XFile (or null if capture failed)
+  Future<void> _captureAndNotify() async {
+    if (!mounted) return;
+
+    final delay = widget.config.captureDelaySeconds;
+
+    // --- Countdown phase ---
+    if (delay > 0) {
+      for (int remaining = delay; remaining > 0; remaining--) {
+        if (!mounted) return;
+        setState(() => _captureCountdown = remaining);
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      if (!mounted) return;
+      setState(() => _captureCountdown = 0);
+    }
+
+    // --- Capture phase ---
+    setState(() => _isCapturing = true);
+    final photo = await _cameraKey.currentState?.capture();
+
+    if (!mounted) return;
+    setState(() => _isCapturing = false);
+    
+    final file = File(photo!.path);
+
+    widget.onPass(file);
   }
 
   // ---------------------------------------------------------------------------
@@ -295,6 +341,8 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
       final result = await _validator.evaluate(
         image: inputImage,
         challenge: _directorState!.activeChallenge,
+        screenSize: _screenSize,
+        cutoutRect: _cutoutRect,
       );
 
       // Report presence/absence so the director can debounce the
@@ -326,6 +374,27 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
 
     // Advance director to next challenge (or emit pass if last)
     _director.onChallengePass();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cutout geometry
+  // ---------------------------------------------------------------------------
+
+  /// Computes the cutout Rect in logical screen pixels from the given [screenSize].
+  /// Must mirror the math in _CutoutPainter exactly so that the validated region
+  /// matches what the user visually sees on screen.
+  Rect _computeCutoutRect(Size screenSize) {
+    final widthFactor = CutoutDefaults.cutoutWidthFactor;
+    final heightFactor = CutoutDefaults.cutoutHeightFactor;
+
+    return Rect.fromCenter(
+      center: Offset(
+        screenSize.width / 2,
+        screenSize.height * CutoutDefaults.cutoutVerticalCenter,
+      ),
+      width: screenSize.width * widthFactor,
+      height: screenSize.height * heightFactor,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -364,13 +433,23 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
       value: SystemUiOverlayStyle.light, // white status bar icons on dark bg
       child: ColoredBox(
         color: DetectionColors.navyDark,
-        child: CameraInputStream(
-          key: _cameraKey,
-          lensDirection: CameraLensDirection.front,
-          onImage: _onImage,
-          onInitFailure: _handleInitFailure,
-          loadingWidget: _buildLoadingView(),
-          overlayBuilder: _buildOverlay,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final size = constraints.biggest;
+            // Update cutout rect whenever size changes (rotation, etc.)
+            if (_screenSize != size) {
+              _screenSize = size;
+              _cutoutRect = _computeCutoutRect(size);
+            }
+            return CameraInputStream(
+              key: _cameraKey,
+              lensDirection: CameraLensDirection.front,
+              onImage: _onImage,
+              onInitFailure: _handleInitFailure,
+              loadingWidget: _buildLoadingView(),
+              overlayBuilder: _buildOverlay,
+            );
+          },
         ),
       ),
     );
@@ -394,10 +473,17 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
       fit: StackFit.expand,
       children: [
         // Cutout overlay — dims everything outside the face frame
-        CutoutOverlayLayer(style: widget.style),
+        _CutoutOverlayLayer(style: widget.style),
 
         // Success flash — brief green tint on challenge pass
         SuccessFlash(visible: _showSuccessFlash),
+
+        // Capturing indicator — shown during countdown and while takePicture() runs
+        if (_captureCountdown > 0 || _isCapturing)
+          _CapturingIndicator(
+            countdown: _captureCountdown,
+            isCapturing: _isCapturing,
+          ),
 
         // "No face detected" hint — debounced, shown over the cutout
         if (state != null && !state.isComplete)
@@ -427,6 +513,91 @@ class _FaceLivenessWidgetState extends State<FaceLivenessWidget> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Cutout overlay layer — dims outside the face frame + draws the border
+// ---------------------------------------------------------------------------
+
+class _CutoutOverlayLayer extends StatelessWidget {
+  final DetectionStyle style;
+
+  const _CutoutOverlayLayer({required this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _CutoutPainter(style: style),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
+class _CutoutPainter extends CustomPainter {
+  final DetectionStyle style;
+
+  const _CutoutPainter({required this.style});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final shape = style.cutoutShape;
+
+    final cutoutWidth =
+        size.width *
+        (shape is OvalCutout
+            ? shape.widthFactor
+            : (shape as RectCutout).widthFactor);
+    final cutoutHeight =
+        size.height *
+        (shape is OvalCutout
+            ? shape.heightFactor
+            : (shape as RectCutout).heightFactor);
+
+    final cutoutRect = Rect.fromCenter(
+      center: Offset(
+        size.width / 2,
+        size.height * CutoutDefaults.cutoutVerticalCenter,
+      ),
+      width: cutoutWidth,
+      height: cutoutHeight,
+    );
+
+    // --- Dim overlay path (full screen minus cutout) ---
+    final overlayPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final cutoutPath = _buildCutoutPath(shape, cutoutRect);
+    final dimPath = Path.combine(
+      PathOperation.difference,
+      overlayPath,
+      cutoutPath,
+    );
+
+    canvas.drawPath(dimPath, Paint()..color = style.cameraOverlayColor);
+
+    // --- Frame border ---
+    canvas.drawPath(
+      cutoutPath,
+      Paint()
+        ..color = style.frameBorderColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = style.frameBorderWidth
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  Path _buildCutoutPath(CutoutShape shape, Rect rect) {
+    return switch (shape) {
+      OvalCutout() => Path()..addOval(rect),
+      RectCutout(borderRadius: final r) =>
+        Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(r))),
+    };
+  }
+
+  @override
+  bool shouldRepaint(_CutoutPainter oldDelegate) =>
+      oldDelegate.style.cutoutShape != oldDelegate.style.cutoutShape ||
+      oldDelegate.style.cameraOverlayColor != style.cameraOverlayColor ||
+      oldDelegate.style.frameBorderColor != style.frameBorderColor;
+}
 
 // ---------------------------------------------------------------------------
 // Challenge UI layer — overlaid on the camera at the bottom
@@ -488,5 +659,145 @@ class _ChallengeUiLayer extends StatelessWidget {
     if (custom != null) return custom;
 
     return ChallengeOverlay(challenge: challenge, style: style);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Capturing indicator
+// ---------------------------------------------------------------------------
+
+/// Overlay shown after all challenges pass, covering two phases:
+///
+/// Phase 1 — Countdown ([countdown] > 0):
+///   Large animated number counts down. The user sees themselves in the
+///   preview and can settle into a neutral pose before the shot is taken.
+///
+/// Phase 2 — Capturing ([isCapturing] true):
+///   Spinner + "Capturing…" label while takePicture() runs.
+class _CapturingIndicator extends StatefulWidget {
+  final int countdown;   // seconds remaining; 0 when countdown is done
+  final bool isCapturing; // true while takePicture() is in progress
+
+  const _CapturingIndicator({
+    required this.countdown,
+    required this.isCapturing,
+  });
+
+  @override
+  State<_CapturingIndicator> createState() => _CapturingIndicatorState();
+}
+
+class _CapturingIndicatorState extends State<_CapturingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
+  int _displayedCountdown = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayedCountdown = widget.countdown;
+
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.elasticOut,
+    );
+
+    if (widget.countdown > 0) _scaleController.forward(from: 0);
+  }
+
+  @override
+  void didUpdateWidget(_CapturingIndicator old) {
+    super.didUpdateWidget(old);
+    // Animate the number pop on each countdown tick
+    if (widget.countdown != old.countdown && widget.countdown > 0) {
+      _displayedCountdown = widget.countdown;
+      _scaleController.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: DetectionColors.navyDark.withValues(alpha: 0.55),
+      child: Center(
+        child: widget.isCapturing
+            ? const _SpinnerPhase()
+            : _CountdownPhase(
+                countdown: _displayedCountdown,
+                scaleAnimation: _scaleAnimation,
+              ),
+      ),
+    );
+  }
+}
+
+class _CountdownPhase extends StatelessWidget {
+  final int countdown;
+  final Animation<double> scaleAnimation;
+
+  const _CountdownPhase({
+    required this.countdown,
+    required this.scaleAnimation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ScaleTransition(
+          scale: scaleAnimation,
+          child: Text(
+            '$countdown',
+            style: const TextStyle(
+              fontSize: 96,
+              fontWeight: FontWeight.w700,
+              color: DetectionColors.whiteHigh,
+              height: 1,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Get ready…',
+          style: DetectionTextStyles.challengeInstruction.copyWith(
+            color: DetectionColors.whiteMid,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SpinnerPhase extends StatelessWidget {
+  const _SpinnerPhase();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(
+              color: DetectionColors.crimson,
+              strokeWidth: 2.5,
+            ),
+            SizedBox(height: 16),
+        Text(
+          'Capturing…',
+          style: DetectionTextStyles.challengeSubtitle,
+      ),
+      ],
+    );
   }
 }

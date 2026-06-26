@@ -31,6 +31,7 @@
 //   // When done:
 //   await validator.dispose();
 
+import 'package:flutter/widgets.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'liveness_challenge.dart';
 import 'liveness_thresholds.dart';
@@ -91,7 +92,8 @@ class ChallengeValidator {
         // Classification required for blink + smile probability scores
         enableClassification: true,
         // Euler angles required for head turn + tilt detection
-        enableTracking: false, // tracking not needed; we just need per-frame angles
+        enableTracking:
+            false, // tracking not needed; we just need per-frame angles
         // Performance mode: accurate for liveness (not real-time streaming game)
         performanceMode: FaceDetectorMode.accurate,
         // Minimum face size as fraction of image — filters out tiny/far faces
@@ -128,14 +130,23 @@ class ChallengeValidator {
   /// [image] must be an [InputImage] built from the camera plugin's CameraImage.
   /// Use [InputImage.fromBytes] with the correct [InputImageMetadata].
   ///
+  /// [screenSize] and [cutoutRect] together enable cutout containment checking.
+  /// When both are provided, the face bounding box is projected from raw buffer
+  /// coordinates to screen coordinates — accounting for sensor rotation and
+  /// front camera mirroring — and the face center must fall inside [cutoutRect]
+  /// before any challenge threshold is evaluated. Pass null to skip the check.
+  ///
   /// Returns [ChallengeResult.pass] when the challenge threshold is met.
   /// Returns [ChallengeResult.notYet] when a valid face is present but
   /// the threshold hasn't been crossed yet.
-  /// Returns [ChallengeResult.noFace] when no usable face is in the frame.
+  /// Returns [ChallengeResult.noFace] when no usable face is in the frame,
+  /// or when the face center is outside [cutoutRect].
   /// Returns [ChallengeResult.error] on ML Kit processing failure.
   Future<ChallengeResult> evaluate({
     required InputImage image,
     required LivenessChallenge challenge,
+    Size? screenSize,
+    Rect? cutoutRect,
   }) async {
     assert(_isInitialized, 'Call initialize() before evaluate().');
     assert(!_isDisposed, 'ChallengeValidator has been disposed.');
@@ -149,8 +160,25 @@ class ChallengeValidator {
       // Use the largest detected face (most prominent in frame)
       final face = _largestFace(faces);
 
-      // Validate face quality before checking challenge thresholds
+      // Validate face quality (area / landmark count)
       if (!_isFaceValid(face)) return ChallengeResult.noFace;
+
+      // Validate face is inside the cutout region
+      if (screenSize != null && cutoutRect != null) {
+        final rawImageSize = image.metadata?.size;
+        final rotation = image.metadata?.rotation;
+        if (rawImageSize != null &&
+            rotation != null &&
+            !_isFaceInCutout(
+              face,
+              rawImageSize,
+              rotation,
+              screenSize,
+              cutoutRect,
+            )) {
+          return ChallengeResult.noFace;
+        }
+      }
 
       return _evaluateChallenge(face, challenge);
     } catch (_) {
@@ -178,6 +206,109 @@ class ChallengeValidator {
     return area >= LivenessThresholds.minimumFaceAreaPx;
   }
 
+  /// Projects the face bounding box center from ML Kit image coordinates to
+  /// screen coordinates and checks whether it falls inside [cutoutRect].
+  ///
+  /// ── Coordinate spaces involved ──────────────────────────────────────────
+  ///
+  /// 1. Raw buffer space  — the NV21 bytes as delivered by the camera driver.
+  ///    On Android with a portrait phone, the sensor is typically rotated 90°,
+  ///    so the raw buffer is LANDSCAPE in memory (e.g. 640 w × 480 h).
+  ///    [rawImageSize] is this size. ML Kit boundingBox values live here.
+  ///
+  /// 2. Logical image space — the buffer after applying [rotation].
+  ///    For rotation90/270 we swap width↔height: e.g. 480 w × 640 h.
+  ///    This is the coordinate space that matches the upright camera preview.
+  ///
+  /// 3. Screen space — logical pixels on the device display.
+  ///    The camera preview is rendered with BoxFit.cover from logical image
+  ///    space, scaling to fill the screen and cropping the shorter axis.
+  ///    [screenSize] and [cutoutRect] are in this space.
+  ///
+  /// ── Transform steps ──────────────────────────────────────────────────────
+  ///
+  /// A. Rotate the face center from raw buffer → logical image space.
+  ///    Rotation is always counter-clockwise (ML Kit convention).
+  ///    We rotate clockwise to reverse it.
+  ///
+  /// B. Mirror X in logical image space for the front camera.
+  ///    The flutter camera plugin mirrors the preview; ML Kit sees the raw
+  ///    unmirrored frame. After rotation the logical image width is known.
+  ///
+  /// C. BoxFit.cover scale + crop: scale by the dominant axis, subtract
+  ///    the half-crop offset on the non-dominant axis.
+  bool _isFaceInCutout(
+    Face face,
+    Size rawImageSize,
+    InputImageRotation rotation,
+    Size screenSize,
+    Rect cutoutRect,
+  ) {
+    // ── A. Rotate face center from raw buffer → logical image space ──
+    double x = face.boundingBox.center.dx;
+    double y = face.boundingBox.center.dy;
+    final double rw = rawImageSize.width;
+    final double rh = rawImageSize.height;
+
+    // After applying rotation, these are the logical image dimensions.
+    // For 0/180 the buffer is already portrait; for 90/270 swap.
+    final double logicalW;
+    final double logicalH;
+
+    switch (rotation) {
+      case InputImageRotation.rotation0deg:
+        // No rotation needed — axes already match display
+        logicalW = rw;
+        logicalH = rh;
+      // x, y unchanged
+
+      case InputImageRotation.rotation90deg:
+        // Raw buffer is landscape; display is portrait.
+        // Clockwise 90° reversal: (x, y) → (rh - y, x)
+        final rotX = rh - y;
+        final rotY = x;
+        x = rotX;
+        y = rotY;
+        logicalW = rh; // swapped
+        logicalH = rw;
+
+      case InputImageRotation.rotation180deg:
+        // 180° flip: (x, y) → (rw - x, rh - y)
+        x = rw - x;
+        y = rh - y;
+        logicalW = rw;
+        logicalH = rh;
+
+      case InputImageRotation.rotation270deg:
+        // Counter-clockwise 90° reversal: (x, y) → (y, rw - x)
+        final rotX = y;
+        final rotY = rw - x;
+        x = rotX;
+        y = rotY;
+        logicalW = rh; // swapped
+        logicalH = rw;
+    }
+
+    // ── B. Mirror X for front camera (preview is horizontally flipped) ──
+    x = logicalW - x;
+
+    // ── C. BoxFit.cover: scale to fill screen, crop the smaller axis ──
+    final scaleX = screenSize.width / logicalW;
+    final scaleY = screenSize.height / logicalH;
+    final scale = scaleX > scaleY ? scaleX : scaleY;
+
+    final scaledW = logicalW * scale;
+    final scaledH = logicalH * scale;
+
+    final cropX = (scaledW - screenSize.width) / 2;
+    final cropY = (scaledH - screenSize.height) / 2;
+
+    final screenX = x * scale - cropX;
+    final screenY = y * scale - cropY;
+
+    return cutoutRect.contains(Offset(screenX, screenY));
+  }
+
   /// Routes to the appropriate challenge evaluator.
   ChallengeResult _evaluateChallenge(Face face, LivenessChallenge challenge) {
     return switch (challenge) {
@@ -200,10 +331,12 @@ class ChallengeValidator {
     // If classification data is missing, skip this frame
     if (leftOpen == null || rightOpen == null) return ChallengeResult.notYet;
 
-    final eyesClosed = leftOpen < LivenessThresholds.blinkClosedThreshold &&
+    final eyesClosed =
+        leftOpen < LivenessThresholds.blinkClosedThreshold &&
         rightOpen < LivenessThresholds.blinkClosedThreshold;
 
-    final eyesOpen = leftOpen > LivenessThresholds.blinkReopenThreshold &&
+    final eyesOpen =
+        leftOpen > LivenessThresholds.blinkReopenThreshold &&
         rightOpen > LivenessThresholds.blinkReopenThreshold;
 
     if (!_blinkState.eyesClosed && eyesClosed) {

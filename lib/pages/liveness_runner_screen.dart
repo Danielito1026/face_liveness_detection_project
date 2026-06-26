@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:face_detect_trial/pages/result_view.dart';
 import 'package:face_detect_trial/widgets/face_liveness/face_liveness_config.dart';
 import 'package:face_detect_trial/widgets/detection_styles/detection_style.dart';
@@ -26,10 +27,14 @@ class _LivenessRunnerScreenState extends State<LivenessRunnerScreen> {
   // In the real app this is driven by FaceNotifier's AsyncNotifier state.
   // Here we use a simple local enum to show the three outcome states.
   _SessionOutcome _outcome = _SessionOutcome.running;
+  File? _capturedPhoto;
 
-  void _onPass() {
+  void _onPass(File? photo) {
     if (!mounted) return;
-    setState(() => _outcome = _SessionOutcome.passed);
+    setState(() {
+      _capturedPhoto = photo;
+      _outcome = _SessionOutcome.passed;
+    });
   }
 
   void _onTimeout() {
@@ -45,7 +50,10 @@ class _LivenessRunnerScreenState extends State<LivenessRunnerScreen> {
   }
 
   void _retry() {
-    setState(() => _outcome = _SessionOutcome.running);
+    setState(() {
+      _outcome = _SessionOutcome.running;
+      _capturedPhoto = null;
+    });
   }
 
   @override
@@ -70,10 +78,13 @@ class _LivenessRunnerScreenState extends State<LivenessRunnerScreen> {
           icon: Icons.check_circle_outline_rounded,
           iconColor: const Color(0xFF00C853),
           title: 'Verified',
-          message:
-              'All challenges passed. In the real app, '
-              'FaceNotifier would POST to /api/attendance/submit here.',
+          message: _capturedPhoto != null
+              ? 'All challenges passed.\nPhoto captured:\n${_capturedPhoto!.path}\n\n'
+                    'In the real app, FaceNotifier POSTs this to /api/attendance/submit.'
+              : 'All challenges passed but photo capture failed.\n'
+                    'FaceNotifier can retry or proceed without the photo.',
           actionLabel: 'Try Again',
+          content: Image(image: FileImage(_capturedPhoto!)),
           onAction: _retry,
         ),
 
